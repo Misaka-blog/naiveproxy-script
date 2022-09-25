@@ -342,7 +342,7 @@ menu() {
     clear
     check_status
     echo "#############################################################"
-    echo -e "#                  ${RED}NaiveProxy  一键安装脚本${PLAIN}                 #"
+    echo -e "#                  ${RED}NaiveProxy  一键配置脚本${PLAIN}                 #"
     echo -e "# ${GREEN}作者${PLAIN}: MisakaNo の 小破站                                  #"
     echo -e "# ${GREEN}博客${PLAIN}: https://blog.misaka.rest                            #"
     echo -e "# ${GREEN}GitLab${PLAIN}: https://gitlab.com/misakablog                     #"
