@@ -118,12 +118,12 @@ makeconfig(){
         domainIP=$(curl -sm8 ipget.net/?ip="${domain}")
         if [[ $WARPv4Status =~ on|plus ]] || [[ $WARPv6Status =~ on|plus ]]; then
             wg-quick down wgcf >/dev/null 2>&1
-            ipv4=$(curl -s4m8 ip.gs)
-            ipv6=$(curl -s6m8 ip.gs)
+            ipv4=$(curl -s4m8 ip.p3terx.com -k | sed -n 1p)
+            ipv6=$(curl -s6m8 ip.p3terx.com -k | sed -n 1p)
             wg-quick up wgcf >/dev/null 2>&1
         else
-            ipv4=$(curl -s4m8 ip.gs)
-            ipv6=$(curl -s6m8 ip.gs)
+            ipv4=$(curl -s4m8 ip.p3terx.com -k | sed -n 1p)
+            ipv6=$(curl -s6m8 ip.p3terx.com -k | sed -n 1p)
         fi
 
         if [[ $domainIP == $ipv6 ]]; then
