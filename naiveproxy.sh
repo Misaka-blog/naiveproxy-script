@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 export LANG=en_US.UTF-8
@@ -118,12 +117,12 @@ makeconfig(){
         domainIP=$(curl -sm8 ipget.net/?ip="${domain}")
         if [[ $WARPv4Status =~ on|plus ]] || [[ $WARPv6Status =~ on|plus ]]; then
             wg-quick down wgcf >/dev/null 2>&1
-            ipv4=$(curl -s4m8 ip.p3terx.com -k | sed -n 1p)
-            ipv6=$(curl -s6m8 ip.p3terx.com -k | sed -n 1p)
+            ipv4=$(curl -s4m8 api64.ipify.org -k)
+            ipv6=$(curl -s6m8 api64.ipify.org -k)
             wg-quick up wgcf >/dev/null 2>&1
         else
-            ipv4=$(curl -s4m8 ip.p3terx.com -k | sed -n 1p)
-            ipv6=$(curl -s6m8 ip.p3terx.com -k | sed -n 1p)
+            ipv4=$(curl -s4m8 api64.ipify.org -k)
+            ipv6=$(curl -s6m8 api64.ipify.org -k)
         fi
 
         if [[ $domainIP == $ipv6 ]]; then
