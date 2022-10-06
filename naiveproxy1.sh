@@ -72,93 +72,9 @@ buildCaddy(){
     mv ./caddy /usr/bin/caddy
 }
 
-makesite(){
-    rm -rf /var/www/html
-    mkdir -p /var/www/html
-    cd /var/www/html
-    wget -N --no-check-certificate https://gitlab.com/misakablog/naiveproxy-script/-/raw/main/mikutap.zip
-    if [[ -z $(type -P unzip) ]]; then
-        if [[ ! $SYSTEM == "CentOS" ]]; then
-            ${PACKAGE_UPDATE[int]}
-        fi
-        ${PACKAGE_INSTALL[int]} unzip
-    fi
-    unzip mikutap.zip
-}
-
 makeconfig(){
-    acmeDomain=$(bash ~/.acme.sh/acme.sh --list | sed -n 2p | awk -F ' ' '{print $1}')
-    if [[ -n $acmeDomain ]]; then
-        domain=$acmeDomain
-    else
-        read -rp "请输入需要用在NaiveProxy的域名：" domain
-        [[ -z $domain ]] && read -rp "请输入需要用在NaiveProxy的域名：" domain
+    read -rp "请输入需要用在NaiveProxy的域名：" domain
 
-        if [[ ! $SYSTEM == "CentOS" ]]; then
-            ${PACKAGE_UPDATE[int]}
-        fi
-        ${PACKAGE_INSTALL[int]} curl wget sudo socat
-        if [[ $SYSTEM == "CentOS" ]]; then
-            ${PACKAGE_INSTALL[int]} cronie
-            systemctl start crond
-            systemctl enable crond
-        else
-            ${PACKAGE_INSTALL[int]} cron
-            systemctl start cron
-            systemctl enable cron
-        fi
-
-        curl https://get.acme.sh | sh -s email=$(date +%s%N | md5sum | cut -c 1-16)@gmail.com
-        source ~/.bashrc
-        bash ~/.acme.sh/acme.sh --upgrade --auto-upgrade
-        bash ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
-
-        WARPv4Status=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
-        WARPv6Status=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
-        domainIP=$(curl -sm8 ipget.net/?ip="${domain}")
-        if [[ $WARPv4Status =~ on|plus ]] || [[ $WARPv6Status =~ on|plus ]]; then
-            wg-quick down wgcf >/dev/null 2>&1
-            ipv4=$(curl -s4m8 api64.ipify.org -k)
-            ipv6=$(curl -s6m8 api64.ipify.org -k)
-            wg-quick up wgcf >/dev/null 2>&1
-        else
-            ipv4=$(curl -s4m8 api64.ipify.org -k)
-            ipv6=$(curl -s6m8 api64.ipify.org -k)
-        fi
-
-        if [[ $domainIP == $ipv6 ]]; then
-            bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --listen-v6 --insecure
-        fi
-        if [[ $domainIP == $ipv4 ]]; then
-            bash ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --insecure
-        fi
-        if [[ $domainIP != $ipv4 ]] && [[ $domainIP != $ipv6 ]]; then
-            red "当前域名解析的IP与当前VPS使用的真实IP不匹配"
-            green "建议如下："
-            yellow "1. 请确保CloudFlare小云朵为关闭状态(仅限DNS), 其他域名解析或CDN网站设置同理"
-            yellow "2. 请检查DNS解析设置的IP是否为VPS的真实IP"
-            yellow "3. 脚本可能跟不上时代, 建议截图发布到GitHub Issues、GitLab Issues、论坛或TG群询问"
-            exit 1
-        fi
-        bash ~/.acme.sh/acme.sh --install-cert -d ${domain} --key-file /root/private.key --fullchain-file /root/cert.crt --ecc
-
-        if [[ -f /root/cert.crt && -f /root/private.key ]]; then
-            if [[ -s /root/cert.crt && -s /root/private.key ]]; then
-                sed -i '/--cron/d' /etc/crontab >/dev/null 2>&1
-                echo "0 0 * * * root bash /root/.acme.sh/acme.sh --cron -f >/dev/null 2>&1" >> /etc/crontab
-                green "证书申请成功! 脚本申请到的证书 (cert.crt) 和私钥 (private.key) 文件已保存到 /root 文件夹下"
-                yellow "证书crt文件路径如下: /root/cert.crt"
-                yellow "私钥key文件路径如下: /root/private.key"
-            else
-                red "很抱歉，证书申请失败"
-                green "建议如下: "
-                yellow "1. 自行检测防火墙是否打开, 如使用80端口申请模式时, 请关闭防火墙或放行80端口"
-                yellow "2. 同一域名多次申请可能会触发Let's Encrypt官方风控, 请尝试使用脚本菜单的9选项更换证书颁发机构, 再重试申请证书, 或更换域名、或等待7天后再尝试执行脚本"
-                yellow "3. 脚本可能跟不上时代, 建议截图发布到GitHub Issues询问"
-                exit 1
-            fi
-        fi
-    fi
     read -rp "请输入NaiveProxy的用户名 [默认随机生成]：" proxyname
     [[ -z $proxyname ]] && proxyname=$(date +%s%N | md5sum | cut -c 1-8)
     read -rp "请输入NaiveProxy的密码 [默认随机生成]：" proxypwd
@@ -166,101 +82,20 @@ makeconfig(){
 
     yellow "正在写入配置文件，请稍等..."
     sleep 2
-    cat > /usr/bin/naive.json <<EOF
-{
-    "admin": {
-        "disabled": true
-    },
-    "logging": {
-        "sink": {
-            "writer": {
-                "output": "discard"
-            }
-        },
-        "logs": {
-            "default": {
-                "writer": {
-                    "output": "discard"
-                }
-            }
-        }
-    },
-    "apps": {
-        "http": {
-            "servers": {
-                "srv0": {
-                    "listen": [
-                        ":443"
-                    ],
-                    "routes": [
-                        {
-                            "handle": [
-                                {
-                                    "handler": "subroute",
-                                    "routes": [
-                                        {
-                                            "handle": [
-                                                {
-                                                    "auth_pass_deprecated": "${proxypwd}",
-                                                    "auth_user_deprecated": "${proxyname}",
-                                                    "handler": "forward_proxy",
-                                                    "hide_ip": true,
-                                                    "hide_via": true,
-                                                    "probe_resistance": {}
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "match": [
-                                                {
-                                                    "host": [
-                                                        "${domain}"
-                                                    ]
-                                                }
-                                            ],
-                                            "handle": [
-                                                {
-                                                    "handler": "file_server",
-                                                    "root": "/var/www/html",
-                                                    "index_names": [
-                                                        "index.html"
-                                                    ]
-                                                }
-                                            ],
-                                            "terminal": true
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    "experimental_http3": true,
-                    "tls_connection_policies": [
-                        {
-                            "match": {
-                                "sni": [
-                                    "${domain}"
-                                ]
-                            }
-                        }
-                    ],
-                    "automatic_https": {
-                        "disable": true
-                    }
-                }
-            }
-        },
-        "tls": {
-            "certificates": {
-                "load_files": [
-                    {
-                        "certificate": "/root/cert.crt",
-                        "key": "/root/private.key"
-                    }
-                ]
-            }
-        }
-    }
+    cat > /usr/bin/Caddyfile <<EOF
+:443, $domain
+tls example@example.com
+route {
+ forward_proxy {
+   basic_auth $proxyname $proxypwd
+   hide_ip
+   hide_via
+   probe_resistance
+  }
+ reverse_proxy  https://demo.cloudreve.org  {
+   header_up  Host  {upstream_hostport}
+   header_up  X-Forwarded-Host  {host}
+  }
 }
 EOF
 
@@ -273,7 +108,7 @@ WantedBy=multi-user.target
 [Service]
 Type=simple
 WorkingDirectory=/root
-ExecStart=/usr/bin/caddy run -config /usr/bin/naive.json
+ExecStart=/usr/bin/caddy run
 Restart=always
 TEXT
 
@@ -294,7 +129,6 @@ installProxy(){
     fi
     buildCaddy
     makeconfig
-    makesite
     systemctl start naiveproxy
     systemctl enable naiveproxy
     green "NaiveProxy 已安装成功！"
