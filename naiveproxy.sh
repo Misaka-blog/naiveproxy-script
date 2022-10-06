@@ -265,7 +265,7 @@ EOF
 
     cat <<'TEXT' > /etc/systemd/system/naiveproxy.service
 [Unit]
-Description=Naiveproxy server, script by taffychan
+Description=Naiveproxy server, script by Misaka-blog
 After=network.target
 [Install]
 WantedBy=multi-user.target
