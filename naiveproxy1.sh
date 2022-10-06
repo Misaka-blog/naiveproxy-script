@@ -69,7 +69,7 @@ buildCaddy(){
     go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
     ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
     rm -rf go
-    mv ./caddy /usr/bin/caddy
+    mv ./caddy /opt/naiveproxy/caddy
 }
 
 makeconfig(){
@@ -82,7 +82,7 @@ makeconfig(){
 
     yellow "正在写入配置文件，请稍等..."
     sleep 2
-    cat > /usr/bin/Caddyfile <<EOF
+    cat > /opt/naiveproxy/Caddyfile <<EOF
 :443, $domain
 tls example@example.com
 route {
@@ -108,7 +108,7 @@ WantedBy=multi-user.target
 [Service]
 Type=simple
 WorkingDirectory=/root
-ExecStart=/usr/bin/caddy run
+ExecStart=/opt/naiveproxy/caddy run
 Restart=always
 TEXT
 
@@ -140,8 +140,7 @@ installProxy(){
 uninstallProxy(){
     systemctl stop naiveproxy
     systemctl disable naiveproxy
-    rm -rf /var/www/html
-    rm -f /usr/bin/caddy /etc/systemd/system/naiveproxy.service /usr/bin/naive.json
+    rm -f /opt/naiveproxy/caddy /etc/systemd/system/naiveproxy.service
     rm -f /root/naive-qvurl.txt /root/naive-client.json
 }
 
