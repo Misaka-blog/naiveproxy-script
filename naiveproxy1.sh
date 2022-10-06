@@ -108,7 +108,7 @@ After=network.target
 WantedBy=multi-user.target
 [Service]
 Type=simple
-WorkingDirectory=/root
+WorkingDirectory=/opt/naiveproxy
 ExecStart=/opt/naiveproxy/caddy run
 Restart=always
 TEXT
