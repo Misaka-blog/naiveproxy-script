@@ -141,7 +141,8 @@ installProxy(){
 uninstallProxy(){
     systemctl stop naiveproxy
     systemctl disable naiveproxy
-    rm -f /opt/naiveproxy/caddy /etc/systemd/system/naiveproxy.service
+    rm -rf /opt/naiveproxy
+    rm -f /etc/systemd/system/naiveproxy.service
     rm -f /root/naive-qvurl.txt /root/naive-client.json
 }
 
