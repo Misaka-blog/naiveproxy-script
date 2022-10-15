@@ -48,44 +48,31 @@ if [[ -z $(type -P curl) ]]; then
     ${PACKAGE_INSTALL[int]} curl
 fi
 
-archAffix(){
-    case "$(uname -m)" in
-        x86_64 | amd64 ) echo 'amd64' ;;
-        armv8 | arm64 | aarch64 ) echo 'arm64' ;;
-        s390x ) echo 's390x' ;;
-        * ) red "不支持的CPU架构!" && exit 1 ;;
-    esac
-}
-
-installGolang(){
-    wget -N https://go.dev/dl/$(curl https://go.dev/VERSION?m=text).linux-$(archAffix).tar.gz
-    tar -xf go*.linux-$(archAffix).tar.gz -C /usr/local/
-    export PATH=$PATH:/usr/local/go/bin
-    rm -f go*.linux-$(archAffix).tar.gz
-}
-
-buildCaddy(){
+instnaive(){
+    if [[ -z $(type -P go) ]]; then
+        if [[ $SYSTEM == "CentOS" ]]; then
+            ${PACKAGE_INSTALL[int]} golang
+        else
+            ${PACKAGE_UPDATE[int]}
+            ${PACKAGE_INSTALL[int]} golang-go
+        fi
+    fi
     go env -w GO111MODULE=on
     go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
     ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
-    rm -rf go
-    mkdir /opt/naiveproxy
-    mv ./caddy /opt/naiveproxy/caddy
-}
-
-makeconfig(){
-    read -rp "请输入需要用在NaiveProxy的域名：" domain
-
+    mkdir /opt/naive
+    mv ./caddy /opt/naive/caddy
+    rm -f /root/go
+    
+    read -rp "请输入需要使用在NaiveProxy的域名：" domain
     read -rp "请输入NaiveProxy的用户名 [默认随机生成]：" proxyname
     [[ -z $proxyname ]] && proxyname=$(date +%s%N | md5sum | cut -c 1-8)
     read -rp "请输入NaiveProxy的密码 [默认随机生成]：" proxypwd
     [[ -z $proxypwd ]] && proxypwd=$(cat /proc/sys/kernel/random/uuid)
-
-    yellow "正在写入配置文件，请稍等..."
-    sleep 2
-    cat > /opt/naiveproxy/Caddyfile <<EOF
+    
+    cat << EOF >/opt/naive/Caddyfile
 :443, $domain
-tls example@example.com
+tls admin@seewo.com
 route {
  forward_proxy {
    basic_auth $proxyname $proxypwd
@@ -99,87 +86,46 @@ route {
   }
 }
 EOF
-
-    cat <<'TEXT' > /etc/systemd/system/naiveproxy.service
-[Unit]
-Description=Naiveproxy server, script by Misaka-blog
-After=network.target
-[Install]
-WantedBy=multi-user.target
-[Service]
-Type=simple
-WorkingDirectory=/opt/naiveproxy
-ExecStart=/opt/naiveproxy/caddy run
-Restart=always
-TEXT
-
-cat > /root/naive-client.json <<EOF
+    cat > /root/naive-client.json <<EOF
 {
   "listen": "socks://127.0.0.1:1080",
   "proxy": "https://${proxyname}:${proxypwd}@${domain}",
   "log": ""
 }
-EOF
     qvurl="naive+https://${proxyname}:${proxypwd}@${domain}:443?padding=false#Naive"
     echo $qvurl > /root/naive-qvurl.txt
+    
+    cd /opt/naive
+    /opt/naive/caddy start
 }
-
-installProxy(){
-    if [[ -z $(type -P go) ]]; then
-        installGolang
-    fi
-    buildCaddy
-    makeconfig
-    systemctl start naiveproxy
-    systemctl enable naiveproxy
-    green "NaiveProxy 已安装成功！"
-    yellow "客户端配置文件已保存至 /root/naive-client.json"
-    yellow "Qv2ray 分享连接如下，并已保存至 /root/naive-qvurl.txt"
-    green "${qvurl}"
-}
-
 uninstallProxy(){
-    systemctl stop naiveproxy
-    systemctl disable naiveproxy
-    rm -rf /opt/naiveproxy
-    rm -f /etc/systemd/system/naiveproxy.service
+    cd /opt/naive
+    /opt/naive/caddy stop
+    rm -rf /opt/naive
     rm -f /root/naive-qvurl.txt /root/naive-client.json
 }
-
 startProxy(){
-    systemctl start naiveproxy
-    systemctl enable naiveproxy
+    cd /opt/naive
+    /opt/naive/caddy start
     green "NaiveProxy 已启动成功！"
 }
-
 stopProxy(){
-    systemctl stop naiveproxy
-    systemctl disable naiveproxy
+    cd /opt/naive
+    /opt/naive/caddy stop
     green "NaiveProxy 已停止成功！"
 }
-
-restartProxy(){
-    systemctl restart naiveproxy
+reloadProxy(){
+    cd /opt/naive
+    /opt/naive/caddy reload
     green "NaiveProxy 已重启成功！"
 }
-
-check_status(){
-    if [[ -n $(service naiveproxy status 2>/dev/null | grep "inactive") ]]; then
-        status="${RED}未启动${PLAIN}"
-    elif [[ -n $(service naiveproxy status 2>/dev/null | grep "active") ]]; then
-        status="${GREEN}已启动${PLAIN}"
-    else
-        status="${RED}未安装${PLAIN}"
-    fi
-}
-
-menu() {
+menu(){
     clear
-    check_status
     echo "#############################################################"
     echo -e "#                  ${RED}NaiveProxy  一键配置脚本${PLAIN}                 #"
     echo -e "# ${GREEN}作者${PLAIN}: MisakaNo の 小破站                                  #"
     echo -e "# ${GREEN}博客${PLAIN}: https://blog.misaka.rest                            #"
+    echo -e "# ${GREEN}GitHub 项目${PLAIN}: https://gitlab.com/blog-misaka               #"
     echo -e "# ${GREEN}GitLab 项目${PLAIN}: https://gitlab.com/misakablog                #"
     echo -e "# ${GREEN}Telegram 频道${PLAIN}: https://t.me/misakablogchannel             #"
     echo -e "# ${GREEN}Telegram 群组${PLAIN}: https://t.me/+CLhpemKhaC8wZGIx             #"
@@ -191,11 +137,9 @@ menu() {
     echo " -------------"
     echo -e "  ${GREEN}3.${PLAIN}  启动 NaiveProxy"
     echo -e "  ${GREEN}4.${PLAIN}  停止 NaiveProxy"
-    echo -e "  ${GREEN}5.${PLAIN}  重启 NaiveProxy"
+    echo -e "  ${GREEN}5.${PLAIN}  重载 NaiveProxy"
     echo " -------------"
     echo -e "  ${GREEN}0.${PLAIN} 退出"
-    echo ""
-    echo -e "NaiveProxy 状态：$status"
     echo ""
     read -rp " 请输入选项 [0-5] ：" answer
     case $answer in
@@ -203,9 +147,8 @@ menu() {
         2) uninstallProxy ;;
         3) startProxy ;;
         4) stopProxy ;;
-        5) restartProxy ;;
+        5) reloadProxy ;;
         *) red "请输入正确的选项 [0-5]！" && exit 1 ;;
     esac
 }
-
 menu
