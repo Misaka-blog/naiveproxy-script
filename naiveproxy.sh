@@ -68,7 +68,7 @@ instnaive(){
     read -rp "请输入NaiveProxy的用户名 [默认随机生成]：" proxyname
     [[ -z $proxyname ]] && proxyname=$(date +%s%N | md5sum | cut -c 1-8)
     read -rp "请输入NaiveProxy的密码 [默认随机生成]：" proxypwd
-    [[ -z $proxypwd ]] && proxypwd=$(cat /proc/sys/kernel/random/uuid)
+    [[ -z $proxypwd ]] && proxypwd=$(date +%s%N | md5sum | cut -c 1-16)
     
     cat << EOF >/opt/naive/Caddyfile
 :443, $domain
