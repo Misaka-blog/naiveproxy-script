@@ -86,12 +86,13 @@ route {
   }
 }
 EOF
-    cat > /root/naive-client.json <<EOF
+    cat <<EOF > /root/naive-client.json
 {
   "listen": "socks://127.0.0.1:1080",
   "proxy": "https://${proxyname}:${proxypwd}@${domain}",
   "log": ""
 }
+EOF
     qvurl="naive+https://${proxyname}:${proxypwd}@${domain}:443?padding=false#Naive"
     echo $qvurl > /root/naive-qvurl.txt
     
