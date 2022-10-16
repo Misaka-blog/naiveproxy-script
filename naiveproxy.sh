@@ -61,7 +61,7 @@ installProxy(){
     go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
     ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
     mkdir /opt/naive
-    mv ./caddy /opt/naive/caddy
+    mv /root/caddy /opt/naive/caddy
     rm -f /root/go
     
     read -rp "请输入需要使用在NaiveProxy的域名：" domain
