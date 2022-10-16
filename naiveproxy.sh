@@ -48,7 +48,7 @@ if [[ -z $(type -P curl) ]]; then
     ${PACKAGE_INSTALL[int]} curl
 fi
 
-instnaive(){
+installProxy(){
     if [[ -z $(type -P go) ]]; then
         if [[ $SYSTEM == "CentOS" ]]; then
             ${PACKAGE_INSTALL[int]} golang
