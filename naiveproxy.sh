@@ -60,6 +60,15 @@ installProxy(){
     go env -w GO111MODULE=on
     go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
     ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
+
+    if [[ ! -a "/root/caddy" ]]; then
+        red "NaiveProxy 编译失败！"
+        green "建议如下："
+        yellow "1. 重新运行脚本安装NaiveProxy"
+        yellow "2. 脚本可能跟不上时代, 建议截图发布到GitHub Issues、GitLab Issues或TG群询问"
+        exit 1
+    fi
+
     mkdir /opt/naive
     mv /root/caddy /opt/naive/caddy
     rm -rf /root/go
