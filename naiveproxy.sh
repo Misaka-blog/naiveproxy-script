@@ -136,6 +136,10 @@ EOF
     systemctl daemon-reload
     systemctl enable caddy
     systemctl start caddy
+
+    green "NaiveProxy 已安装成功！"
+    yellow "客户端配置文件已保存至 /root/naive-client.json"
+    yellow "Qv2ray 分享连接如下，并已保存至 /root/naive-qvurl.txt"
 }
 
 uninstallProxy(){
