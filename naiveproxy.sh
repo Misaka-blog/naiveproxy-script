@@ -77,8 +77,8 @@ installProxy(){
         exit 1
     fi
 
-    mkdir /opt/naive
-    mv /root/caddy /opt/naive/caddy
+    mkdir /etc/caddy
+    cp caddy /usr/bin/
     rm -rf /root/go
     
     read -rp "请输入需要使用在NaiveProxy的域名：" domain
@@ -87,7 +87,7 @@ installProxy(){
     read -rp "请输入NaiveProxy的密码 [默认随机生成]：" proxypwd
     [[ -z $proxypwd ]] && proxypwd=$(date +%s%N | md5sum | cut -c 1-16)
     
-    cat << EOF >/opt/naive/Caddyfile
+    cat << EOF >/etc/caddy/Caddyfile
 :443, $domain
 tls admin@seewo.com
 route {
@@ -121,8 +121,8 @@ Requires=network-online.target
 [Service]
 User=root
 Group=root
-ExecStart=/opt/naive/caddy run --environ --config /opt/naive/Caddyfile
-ExecReload=/opt/naive/caddy reload --config /opt/naive/Caddyfile
+ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile
 TimeoutStopSec=5s
 PrivateTmp=true
 ProtectSystem=full
@@ -141,8 +141,8 @@ EOF
 
 uninstallProxy(){
     systemctl stop caddy
-    rm -rf /opt/naive
-    rm -f /root/naive-client.json
+    rm -rf /etc/caddy
+    rm -f /usr/bin/caddy /root/naive-client.json
 }
 
 startProxy(){
