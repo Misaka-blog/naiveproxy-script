@@ -110,8 +110,6 @@ EOF
   "log": ""
 }
 EOF
-    qvurl="naive+https://${proxyname}:${proxypwd}@${domain}:443?padding=false#Naive"
-    echo $qvurl > /root/naive-qvurl.txt
     
     cat << EOF >/etc/systemd/system/caddy.service
 [Unit]
@@ -139,13 +137,12 @@ EOF
 
     green "NaiveProxy 已安装成功！"
     yellow "客户端配置文件已保存至 /root/naive-client.json"
-    yellow "Qv2ray 分享连接如下，并已保存至 /root/naive-qvurl.txt"
 }
 
 uninstallProxy(){
     systemctl stop caddy
     rm -rf /opt/naive
-    rm -f /root/naive-qvurl.txt /root/naive-client.json
+    rm -f /root/naive-client.json
 }
 
 startProxy(){
