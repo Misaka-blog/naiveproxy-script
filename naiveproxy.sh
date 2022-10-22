@@ -48,15 +48,23 @@ if [[ -z $(type -P curl) ]]; then
     ${PACKAGE_INSTALL[int]} curl
 fi
 
+archAffix(){
+    case "$(uname -m)" in
+        x86_64 | amd64 ) echo 'amd64' ;;
+        armv8 | arm64 | aarch64 ) echo 'arm64' ;;
+        s390x ) echo 's390x' ;;
+        * ) red "不支持的CPU架构!" && exit 1 ;;
+    esac
+}
+
 installProxy(){
     if [[ -z $(type -P go) ]]; then
-        if [[ $SYSTEM == "CentOS" ]]; then
-            ${PACKAGE_INSTALL[int]} golang
-        else
-            ${PACKAGE_UPDATE[int]}
-            ${PACKAGE_INSTALL[int]} golang-go
-        fi
+        wget -N https://go.dev/dl/$(curl https://go.dev/VERSION?m=text).linux-$(archAffix).tar.gz
+        tar -xf go*.linux-$(archAffix).tar.gz -C /usr/local/
+        export PATH=$PATH:/usr/local/go/bin
+        rm -f go*.linux-$(archAffix).tar.gz
     fi
+    
     go env -w GO111MODULE=on
     go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
     ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
