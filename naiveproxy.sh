@@ -113,30 +113,54 @@ EOF
     qvurl="naive+https://${proxyname}:${proxypwd}@${domain}:443?padding=false#Naive"
     echo $qvurl > /root/naive-qvurl.txt
     
-    cd /opt/naive
-    /opt/naive/caddy start
+    cat << EOF >/etc/systemd/system/caddy.service
+[Unit]
+Description=Caddy
+Documentation=https://caddyserver.com/docs/
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+User=root
+Group=root
+ExecStart=/opt/naive/caddy run --environ --config /opt/naive/Caddyfile
+ExecReload=/opt/naive/caddy reload --config /opt/naive/Caddyfile
+TimeoutStopSec=5s
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    systemctl daemon-reload
+    systemctl enable caddy
+    systemctl start caddy
 }
+
 uninstallProxy(){
-    cd /opt/naive
-    /opt/naive/caddy stop
+    systemctl stop caddy
     rm -rf /opt/naive
     rm -f /root/naive-qvurl.txt /root/naive-client.json
 }
+
 startProxy(){
-    cd /opt/naive
-    /opt/naive/caddy start
+    systemctl enable caddy
+    systemctl start caddy
     green "NaiveProxy 已启动成功！"
 }
+
 stopProxy(){
-    cd /opt/naive
-    /opt/naive/caddy stop
+    systemctl disable caddy
+    systemctl stop caddy
     green "NaiveProxy 已停止成功！"
 }
+
 reloadProxy(){
-    cd /opt/naive
-    /opt/naive/caddy reload
+    systemctl restart caddy
     green "NaiveProxy 已重启成功！"
 }
+
 menu(){
     clear
     echo "#############################################################"
