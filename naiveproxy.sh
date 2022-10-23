@@ -118,7 +118,7 @@ EOF
 EOF
 
     url="naive+https://${proxyname}:${proxypwd}@${domain}:443?padding=true#Naive"
-    echo $qvurl > /root/naive-url.txt
+    echo $url > /root/naive-url.txt
     
     cat << EOF >/etc/systemd/system/caddy.service
 [Unit]
