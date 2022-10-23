@@ -58,6 +58,11 @@ archAffix(){
 }
 
 installProxy(){
+    if [[ ! $SYSTEM == "CentOS" ]]; then
+        ${PACKAGE_UPDATE[int]}
+    fi
+    ${PACKAGE_INSTALL[int]} curl wget sudo tar qrencode
+
     if [[ -z $(type -P go) ]]; then
         wget -N https://go.dev/dl/$(curl https://go.dev/VERSION?m=text).linux-$(archAffix).tar.gz
         tar -xf go*.linux-$(archAffix).tar.gz -C /usr/local/
@@ -103,6 +108,7 @@ route {
   }
 }
 EOF
+
     cat <<EOF > /root/naive-client.json
 {
   "listen": "socks://127.0.0.1:1080",
@@ -110,6 +116,9 @@ EOF
   "log": ""
 }
 EOF
+
+    url="naive+https://${proxyname}:${proxypwd}@${domain}:443?padding=true#Naive"
+    echo $qvurl > /root/naive-url.txt
     
     cat << EOF >/etc/systemd/system/caddy.service
 [Unit]
@@ -137,6 +146,9 @@ EOF
 
     green "NaiveProxy 已安装成功！"
     yellow "客户端配置文件已保存至 /root/naive-client.json"
+    yellow "Qv2ray / SagerNet / Matsuri 分享链接已保存至 /root/naive-url.txt"
+    yellow "Qv2ray / SagerNet / Matsuri 分享二维码如下："
+    qrencode -o - -t ANSIUTF8 "$url"
 }
 
 uninstallProxy(){
