@@ -74,7 +74,9 @@ installProxy(){
     go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
     ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
 
-    if [[ ! -a "/root/caddy" ]]; then
+    currpwd=$(pwd)
+
+    if [[ ! -a "$pwd/caddy" ]]; then
         red "NaiveProxy 编译失败！"
         green "建议如下："
         yellow "1. 重新运行脚本安装NaiveProxy"
