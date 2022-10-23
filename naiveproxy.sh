@@ -61,30 +61,13 @@ installProxy(){
     if [[ ! $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_UPDATE[int]}
     fi
-    ${PACKAGE_INSTALL[int]} curl wget sudo tar qrencode
+    ${PACKAGE_INSTALL[int]} curl wget sudo qrencode
 
-    if [[ -z $(type -P go) ]]; then
-        wget -N https://go.dev/dl/$(curl https://go.dev/VERSION?m=text).linux-$(archAffix).tar.gz
-        tar -xf go*.linux-$(archAffix).tar.gz -C /usr/local/
-        export PATH=$PATH:/usr/local/go/bin
-        rm -f go*.linux-$(archAffix).tar.gz
-    fi
-    
-    go env -w GO111MODULE=on
-    go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
-    ~/go/bin/xcaddy build --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive
-
-    if [[ ! -a "$(pwd)/caddy" ]]; then
-        red "NaiveProxy 编译失败！"
-        green "建议如下："
-        yellow "1. 重新运行脚本安装NaiveProxy"
-        yellow "2. 脚本可能跟不上时代, 建议截图发布到GitHub Issues、GitLab Issues或TG群询问"
-        exit 1
-    fi
+    rm -f /usr/bin/caddy
+    wget https://gitlab.com/misakablog/naiveproxy-script/-/raw/main/files/caddy-linux-$(archAffix) -O /usr/bin/caddy
+    chmod +x /usr/bin/caddy
 
     mkdir /etc/caddy
-    cp caddy /usr/bin/
-    rm -rf /root/go
     
     read -rp "请输入需要使用在NaiveProxy的域名：" domain
     read -rp "请输入NaiveProxy的用户名 [默认随机生成]：" proxyname
