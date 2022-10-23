@@ -147,7 +147,7 @@ EOF
     green "NaiveProxy 已安装成功！"
     yellow "客户端配置文件已保存至 /root/naive-client.json"
     yellow "Qv2ray / SagerNet / Matsuri 分享链接已保存至 /root/naive-url.txt"
-    yellow "Qv2ray / SagerNet / Matsuri 分享二维码如下："
+    yellow "SagerNet / Matsuri 分享二维码如下："
     qrencode -o - -t ANSIUTF8 "$url"
 }
 
