@@ -143,6 +143,7 @@ uninstallProxy(){
     systemctl stop caddy
     rm -rf /etc/caddy
     rm -f /usr/bin/caddy /root/naive-client.json
+    green "NaiveProxy 已彻底卸载成功！"
 }
 
 startProxy(){
