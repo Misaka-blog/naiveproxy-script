@@ -78,6 +78,15 @@ installProxy(){
             [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
         fi
     done
+    read -rp "请输入需要用在Caddy监听的端口 [回车随机分配端口]：" proxyport
+    [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
+    until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; do
+        if [[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; then
+            echo -e "${RED} $proxyport ${PLAIN} 端口已经被其他程序占用，请更换端口重试！"
+            read -rp "请输入需要用在Caddy监听的端口 [回车随机分配端口]：" proxyport
+            [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
+        fi
+    done
     yellow "将在NaiveProxy使用的端口是：$proxyport"
     read -rp "请输入需要使用在NaiveProxy的域名：" domain
     read -rp "请输入NaiveProxy的用户名 [回车随机生成]：" proxyname
@@ -88,6 +97,9 @@ installProxy(){
     [[ -z $proxysite ]] && proxysite="maimai.sega.jp"
     
     cat << EOF >/etc/caddy/Caddyfile
+{
+http_port $caddyport
+}
 :$proxyport, $domain
 tls admin@seewo.com
 route {
@@ -170,7 +182,7 @@ reloadProxy(){
 }
 
 changeport(){
-    oldport=$(cat /etc/caddy/Caddyfile | sed -n 1p | awk '{print $1}' | sed "s/://g" | sed "s/,//g")
+    oldport=$(cat /etc/caddy/Caddyfile | sed -n 4p | awk '{print $1}' | sed "s/://g" | sed "s/,//g")
     read -rp "请输入需要用在NaiveProxy的端口 [回车随机分配端口]：" proxyport
     [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
     until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; do
@@ -188,7 +200,7 @@ changeport(){
 
 
 changedomain(){
-    olddomain=$(cat /etc/caddy/Caddyfile | sed -n 1p | awk '{print $2}')
+    olddomain=$(cat /etc/caddy/Caddyfile | sed -n 4p | awk '{print $2}')
     read -rp "请输入需要使用在NaiveProxy的域名：" domain
     sed -i "s#$olddomain#$domain#g" /etc/caddy/Caddyfile
     sed -i "s#$olddomain#$domain#g" /root/naive/naive-client.json
@@ -272,6 +284,7 @@ menu(){
         3) startProxy ;;
         4) stopProxy ;;
         5) reloadProxy ;;
+        6) modifyConfig ;;
         *) red "请输入正确的选项 [0-6]！" && exit 1 ;;
     esac
 }
