@@ -185,6 +185,7 @@ changeport(){
     oldport=$(cat /etc/caddy/Caddyfile | sed -n 4p | awk '{print $1}' | sed "s/://g" | sed "s/,//g")
     read -rp "请输入需要用在NaiveProxy的端口 [回车随机分配端口]：" proxyport
     [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
+    
     until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; do
         if [[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; then
             echo -e "${RED} $proxyport ${PLAIN} 端口已经被其他程序占用，请更换端口重试！"
@@ -192,6 +193,7 @@ changeport(){
             [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
         fi
     done
+
     sed -i "s#$oldport#$proxyport#g" /etc/caddy/Caddyfile
     sed -i "s#$oldport#$proxyport#g" /root/naive/naive-client.json
     sed -i "s#$oldport#$proxyport#g" /root/naive/naive-url.txt
@@ -202,15 +204,18 @@ changeport(){
 changedomain(){
     olddomain=$(cat /etc/caddy/Caddyfile | sed -n 4p | awk '{print $2}')
     read -rp "请输入需要使用在NaiveProxy的域名：" domain
+
     sed -i "s#$olddomain#$domain#g" /etc/caddy/Caddyfile
     sed -i "s#$olddomain#$domain#g" /root/naive/naive-client.json
     sed -i "s#$olddomain#$domain#g" /root/naive/naive-url.txt
+    reloadProxy
 }
 
 changeusername(){
     oldproxyname=$(cat /etc/caddy/Caddyfile | grep "basic_auth" | awk '{print $2}')
     read -rp "请输入NaiveProxy的用户名 [回车随机生成]：" proxyname
     [[ -z $proxyname ]] && proxyname=$(date +%s%N | md5sum | cut -c 1-16)
+
     sed -i "s#$oldproxyname#$proxyname#g" /etc/caddy/Caddyfile
     sed -i "s#$oldproxyname#$proxyname#g" /root/naive/naive-client.json
     sed -i "s#$oldproxyname#$proxyname#g" /root/naive/naive-url.txt
@@ -221,6 +226,7 @@ changepassword(){
     oldproxypwd=$(cat /etc/caddy/Caddyfile | grep "basic_auth" | awk '{print $3}')
     read -rp "请输入NaiveProxy的密码 [回车随机生成]：" proxypwd
     [[ -z $proxypwd ]] && proxypwd=$(date +%s%N | md5sum | cut -c 1-16)
+
     sed -i "s#$oldproxypwd#$proxypwd#g" /etc/caddy/Caddyfile
     sed -i "s#$oldproxypwd#$proxypwd#g" /root/naive/naive-client.json
     sed -i "s#$oldproxypwd#$proxypwd#g" /root/naive/naive-url.txt
@@ -231,6 +237,7 @@ changeproxysite(){
     oldproxysite=$(cat /etc/caddy/Caddyfile | grep "reverse_proxy" | awk '{print $2}' | sed "s/https:\/\///g")
     read -rp "请输入NaiveProxy的伪装网站地址 （去除https://） [回车世嘉maimai日本网站]：" proxysite
     [[ -z $proxysite ]] && proxysite="maimai.sega.jp"
+
     sed -i "s#$oldproxysite#$proxysite#g" /etc/caddy/Caddyfile
     reloadProxy
 }
@@ -261,21 +268,22 @@ menu(){
     echo -e "# ${GREEN}作者${PLAIN}: MisakaNo の 小破站                                  #"
     echo -e "# ${GREEN}博客${PLAIN}: https://blog.misaka.rest                            #"
     echo -e "# ${GREEN}GitHub 项目${PLAIN}: https://github.com/Misaka-blog               #"
+    echo -e "# ${GREEN}GitLab 项目${PLAIN}: https://gitlab.com/Misaka-blog               #"
     echo -e "# ${GREEN}Telegram 频道${PLAIN}: https://t.me/misakanocchannel              #"
     echo -e "# ${GREEN}Telegram 群组${PLAIN}: https://t.me/misakanoc                     #"
     echo -e "# ${GREEN}YouTube 频道${PLAIN}: https://www.youtube.com/@misaka-blog        #"
     echo "#############################################################"
     echo ""
-    echo -e "  ${GREEN}1.${PLAIN}  安装 NaiveProxy"
-    echo -e "  ${GREEN}2.${PLAIN}  ${RED}卸载 NaiveProxy${PLAIN}"
+    echo -e " ${GREEN}1.${PLAIN} 安装 NaiveProxy"
+    echo -e " ${GREEN}2.${PLAIN} ${RED}卸载 NaiveProxy${PLAIN}"
     echo " -------------"
-    echo -e "  ${GREEN}3.${PLAIN}  启动 NaiveProxy"
-    echo -e "  ${GREEN}4.${PLAIN}  停止 NaiveProxy"
-    echo -e "  ${GREEN}5.${PLAIN}  重载 NaiveProxy"
+    echo -e " ${GREEN}3.${PLAIN} 启动 NaiveProxy"
+    echo -e " ${GREEN}4.${PLAIN} 停止 NaiveProxy"
+    echo -e " ${GREEN}5.${PLAIN} 重载 NaiveProxy"
     echo " -------------"
-    echo -e "  ${GREEN}6.${PLAIN}  修改 NaiveProxy 配置"
+    echo -e " ${GREEN}6.${PLAIN} 修改 NaiveProxy 配置"
     echo " -------------"
-    echo -e "  ${GREEN}0.${PLAIN} 退出"
+    echo -e " ${GREEN}0.${PLAIN} 退出"
     echo ""
     read -rp " 请输入选项 [0-6] ：" answer
     case $answer in
