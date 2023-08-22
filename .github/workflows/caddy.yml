@@ -41,6 +41,13 @@ jobs:
             release: true
           }
         - {
+            name: "linux-armv5",
+            GOARCH: arm,
+            GOARM: 5,
+            GOOS: linux,
+            release: true
+          }
+        - {
             name: "linux-s390x",
             GOARCH: s390x,
             GOOS: linux,
@@ -53,20 +60,20 @@ jobs:
             release: true
           }
         - {
-            name: "freebsd-arm",
-            GOARCH: arm,
-            GOOS: linux,
-            release: true
-          }
-        - {
-            name: "darwin-arm64",
+            name: "freebsd-arm64",
             GOARCH: arm64,
-            GOOS: darwin,
+            GOOS: linux,
             release: true
           }
         - {
             name: "darwin-amd64",
             GOARCH: amd64,
+            GOOS: darwin,
+            release: true
+          }
+        - {
+            name: "darwin-arm64",
+            GOARCH: arm64,
             GOOS: darwin,
             release: true
           }
@@ -78,7 +85,7 @@ jobs:
     - name: Install go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.19'
+        go-version: '1.21'
         check-latest: true
     
     - name: Install xcaddy
@@ -91,18 +98,27 @@ jobs:
         export GOOS=${{ matrix.config.GOOS }} 
         ~/go/bin/xcaddy build \
           --with github.com/mholt/caddy-l4 \
-          --with github.com/mholt/caddy-dynamicdns \
-          --with github.com/caddy-dns/alidns \
           --with github.com/caddy-dns/cloudflare \
-          --with github.com/caddy-dns/dnspod \
           --with clevergo.tech/caddy-dnspodcn \
           --with github.com/caddy-dns/duckdns \
-          --with github.com/mastercactapus/caddy2-proxyprotocol \
-          --with github.com/caddyserver/forwardproxy@caddy2=github.com/klzgrad/forwardproxy@naive \
+          --with github.com/mholt/caddy-dynamicdns \
+          --with github.com/mholt/caddy-events-exec \
+          --with github.com/WeidiDeng/caddy-cloudflare-ip \
+          --with github.com/caddyserver/forwardproxy@caddy2=github.com/sagernet/forwardproxy@latest \
           --with github.com/imgk/caddy-trojan \
           --with github.com/mholt/caddy-webdav \
           --output ./release-tmp/caddy
+
+    - name: Rename for Windows 
+      if: matrix.config.GOOS == 'windows'
+      run: |
+        mv ./release-tmp/caddy ./release-tmp/caddy.exe
     
+    - name: Calculate Hash
+      run: |
+        cd ./release-tmp || exit 1
+        sha256sum * > sha256
+
     - name: Generate zip for Windows
       if: matrix.config.GOOS == 'windows'
       run: |
@@ -116,6 +132,7 @@ jobs:
         mkdir release-ready
         cd ./release-tmp
         tar -zcvf ../release-ready/caddy-${{ matrix.config.name }}.tar.gz *
+
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3
       with:
