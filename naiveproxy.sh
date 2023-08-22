@@ -102,7 +102,7 @@ installProxy(){
 {
 http_port $caddyport
 }
-:$proxyport, $domain
+:$proxyport, $domain:$proxyport
 tls admin@seewo.com
 route {
  forward_proxy {
