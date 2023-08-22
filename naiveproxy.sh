@@ -69,7 +69,7 @@ installProxy(){
 
     mkdir /etc/caddy
     
-    read -rp "请输入需要用在NaiveProxy的端口 [回车随机分配端口]：" proxyport
+    read -rp "请输入需要用在 NaiveProxy 的端口 [回车随机分配端口]：" proxyport
     [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
     until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; do
         if [[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; then
@@ -78,22 +78,24 @@ installProxy(){
             [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
         fi
     done
-    read -rp "请输入需要用在Caddy监听的端口 [回车随机分配端口]：" proxyport
-    [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
-    until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; do
-        if [[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; then
+    yellow "将在 NaiveProxy 使用的端口是：$proxyport"
+
+    read -rp "请输入需要用在 Caddy 监听的端口 [回车随机分配端口]：" caddyport
+    [[ -z $caddyport ]] && caddyport=$(shuf -i 2000-65535 -n 1)
+    until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$caddyport") ]]; do
+        if [[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$caddyport") ]]; then
             echo -e "${RED} $proxyport ${PLAIN} 端口已经被其他程序占用，请更换端口重试！"
-            read -rp "请输入需要用在Caddy监听的端口 [回车随机分配端口]：" proxyport
-            [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
+            read -rp "请输入需要用在Caddy监听的端口 [回车随机分配端口]：" caddyport
+            [[ -z $caddyport ]] && caddyport=$(shuf -i 2000-65535 -n 1)
         fi
     done
-    yellow "将在NaiveProxy使用的端口是：$proxyport"
-    read -rp "请输入需要使用在NaiveProxy的域名：" domain
-    read -rp "请输入NaiveProxy的用户名 [回车随机生成]：" proxyname
+    
+    read -rp "请输入需要使用在 NaiveProxy 的域名：" domain
+    read -rp "请输入 NaiveProxy 的用户名 [回车随机生成]：" proxyname
     [[ -z $proxyname ]] && proxyname=$(date +%s%N | md5sum | cut -c 1-16)
-    read -rp "请输入NaiveProxy的密码 [回车随机生成]：" proxypwd
+    read -rp "请输入 NaiveProxy 的密码 [回车随机生成]：" proxypwd
     [[ -z $proxypwd ]] && proxypwd=$(date +%s%N | md5sum | cut -c 1-16)
-    read -rp "请输入NaiveProxy的伪装网站地址 （去除https://） [回车世嘉maimai日本网站]：" proxysite
+    read -rp "请输入 NaiveProxy 的伪装网站地址 （去除https://） [回车世嘉maimai日本网站]：" proxysite
     [[ -z $proxysite ]] && proxysite="maimai.sega.jp"
     
     cat << EOF >/etc/caddy/Caddyfile
@@ -183,13 +185,13 @@ reloadProxy(){
 
 changeport(){
     oldport=$(cat /etc/caddy/Caddyfile | sed -n 4p | awk '{print $1}' | sed "s/://g" | sed "s/,//g")
-    read -rp "请输入需要用在NaiveProxy的端口 [回车随机分配端口]：" proxyport
+    read -rp "请输入需要用在 NaiveProxy 的端口 [回车随机分配端口]：" proxyport
     [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
     
     until [[ -z $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; do
         if [[ -n $(ss -ntlp | awk '{print $4}' | sed 's/.*://g' | grep -w "$proxyport") ]]; then
             echo -e "${RED} $proxyport ${PLAIN} 端口已经被其他程序占用，请更换端口重试！"
-            read -rp "请输入需要用在NaiveProxy的端口 [回车随机分配端口]：" proxyport
+            read -rp "请输入需要用在 NaiveProxy 的端口 [回车随机分配端口]：" proxyport
             [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
         fi
     done
@@ -203,7 +205,7 @@ changeport(){
 
 changedomain(){
     olddomain=$(cat /etc/caddy/Caddyfile | sed -n 4p | awk '{print $2}')
-    read -rp "请输入需要使用在NaiveProxy的域名：" domain
+    read -rp "请输入需要使用在 NaiveProxy 的域名：" domain
 
     sed -i "s#$olddomain#$domain#g" /etc/caddy/Caddyfile
     sed -i "s#$olddomain#$domain#g" /root/naive/naive-client.json
@@ -213,7 +215,7 @@ changedomain(){
 
 changeusername(){
     oldproxyname=$(cat /etc/caddy/Caddyfile | grep "basic_auth" | awk '{print $2}')
-    read -rp "请输入NaiveProxy的用户名 [回车随机生成]：" proxyname
+    read -rp "请输入 NaiveProxy 的用户名 [回车随机生成]：" proxyname
     [[ -z $proxyname ]] && proxyname=$(date +%s%N | md5sum | cut -c 1-16)
 
     sed -i "s#$oldproxyname#$proxyname#g" /etc/caddy/Caddyfile
@@ -224,7 +226,7 @@ changeusername(){
 
 changepassword(){
     oldproxypwd=$(cat /etc/caddy/Caddyfile | grep "basic_auth" | awk '{print $3}')
-    read -rp "请输入NaiveProxy的密码 [回车随机生成]：" proxypwd
+    read -rp "请输入 NaiveProxy 的密码 [回车随机生成]：" proxypwd
     [[ -z $proxypwd ]] && proxypwd=$(date +%s%N | md5sum | cut -c 1-16)
 
     sed -i "s#$oldproxypwd#$proxypwd#g" /etc/caddy/Caddyfile
@@ -235,7 +237,7 @@ changepassword(){
 
 changeproxysite(){
     oldproxysite=$(cat /etc/caddy/Caddyfile | grep "reverse_proxy" | awk '{print $2}' | sed "s/https:\/\///g")
-    read -rp "请输入NaiveProxy的伪装网站地址 （去除https://） [回车世嘉maimai日本网站]：" proxysite
+    read -rp "请输入 NaiveProxy 的伪装网站地址 （去除https://） [回车世嘉maimai日本网站]：" proxysite
     [[ -z $proxysite ]] && proxysite="maimai.sega.jp"
 
     sed -i "s#$oldproxysite#$proxysite#g" /etc/caddy/Caddyfile
