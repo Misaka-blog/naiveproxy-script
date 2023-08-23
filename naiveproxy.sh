@@ -78,7 +78,7 @@ installProxy(){
             [[ -z $proxyport ]] && proxyport=$(shuf -i 2000-65535 -n 1)
         fi
     done
-    yellow "将在 NaiveProxy 使用的端口是：$proxyport"
+    yellow "将在 NaiveProxy 节点使用的端口是：$proxyport"
 
     read -rp "请输入需要用在 Caddy 监听的端口 [回车随机分配端口]：" caddyport
     [[ -z $caddyport ]] && caddyport=$(shuf -i 2000-65535 -n 1)
@@ -92,19 +92,19 @@ installProxy(){
     yellow "将用在 Caddy 监听的端口是：$proxyport"
     
     read -rp "请输入需要使用在 NaiveProxy 的域名：" domain
-    yellow "使用在 NaiveProxy 的域名为：$domain"
+    yellow "使用在 NaiveProxy 节点的域名为：$domain"
 
     read -rp "请输入 NaiveProxy 的用户名 [回车随机生成]：" proxyname
     [[ -z $proxyname ]] && proxyname=$(date +%s%N | md5sum | cut -c 1-16)
-    yellow "使用在 NaiveProxy 的用户名为：$proxyname"
+    yellow "使用在 NaiveProxy 节点的用户名为：$proxyname"
 
     read -rp "请输入 NaiveProxy 的密码 [回车随机生成]：" proxypwd
     [[ -z $proxypwd ]] && proxypwd=$(date +%s%N | md5sum | cut -c 1-16)
-    yellow "使用在 NaiveProxy 的密码为：$proxypwd"
+    yellow "使用在 NaiveProxy 节点的密码为：$proxypwd"
 
     read -rp "请输入 NaiveProxy 的伪装网站地址 （去除https://） [回车世嘉maimai日本网站]：" proxysite
     [[ -z $proxysite ]] && proxysite="maimai.sega.jp"
-    yellow "使用在 NaiveProxy 的伪装网站为：$proxysite"
+    yellow "使用在 NaiveProxy 节点的伪装网站为：$proxysite"
     
     cat << EOF >/etc/caddy/Caddyfile
 {
@@ -125,11 +125,11 @@ route {
   }
 }
 EOF
-    
+
     mkdir /root/naive
     cat <<EOF > /root/naive/naive-client.json
 {
-  "listen": "socks://127.0.0.1:1080",
+  "listen": "socks://127.0.0.1:4080",
   "proxy": "https://${proxyname}:${proxypwd}@${domain}:${proxyport}",
   "log": ""
 }
