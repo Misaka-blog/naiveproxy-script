@@ -89,14 +89,22 @@ installProxy(){
             [[ -z $caddyport ]] && caddyport=$(shuf -i 2000-65535 -n 1)
         fi
     done
+    yellow "将用在 Caddy 监听的端口是：$proxyport"
     
     read -rp "请输入需要使用在 NaiveProxy 的域名：" domain
+    yellow "使用在 NaiveProxy 的域名为：$domain"
+
     read -rp "请输入 NaiveProxy 的用户名 [回车随机生成]：" proxyname
     [[ -z $proxyname ]] && proxyname=$(date +%s%N | md5sum | cut -c 1-16)
+    yellow "使用在 NaiveProxy 的用户名为：$proxyname"
+
     read -rp "请输入 NaiveProxy 的密码 [回车随机生成]：" proxypwd
     [[ -z $proxypwd ]] && proxypwd=$(date +%s%N | md5sum | cut -c 1-16)
+    yellow "使用在 NaiveProxy 的密码为：$proxypwd"
+
     read -rp "请输入 NaiveProxy 的伪装网站地址 （去除https://） [回车世嘉maimai日本网站]：" proxysite
     [[ -z $proxysite ]] && proxysite="maimai.sega.jp"
+    yellow "使用在 NaiveProxy 的伪装网站为：$proxysite"
     
     cat << EOF >/etc/caddy/Caddyfile
 {
@@ -117,6 +125,7 @@ route {
   }
 }
 EOF
+    
     mkdir /root/naive
     cat <<EOF > /root/naive/naive-client.json
 {
@@ -153,10 +162,7 @@ EOF
     systemctl start caddy
 
     green "NaiveProxy 已安装成功！"
-    yellow "客户端配置文件已保存至 /root/naive/naive-client.json"
-    yellow "Qv2ray / SagerNet / Matsuri 分享链接已保存至 /root/naive/naive-url.txt"
-    yellow "SagerNet / Matsuri 分享二维码如下："
-    qrencode -o - -t ANSIUTF8 "$url"
+    showconf
 }
 
 uninstallProxy(){
@@ -199,7 +205,12 @@ changeport(){
     sed -i "s#$oldport#$proxyport#g" /etc/caddy/Caddyfile
     sed -i "s#$oldport#$proxyport#g" /root/naive/naive-client.json
     sed -i "s#$oldport#$proxyport#g" /root/naive/naive-url.txt
+
     reloadProxy
+
+    green "NaiveProxy 节点端口已成功修改为：$port"
+    yellow "请手动更新客户端配置文件以使用节点"
+    showconf
 }
 
 
@@ -210,7 +221,12 @@ changedomain(){
     sed -i "s#$olddomain#$domain#g" /etc/caddy/Caddyfile
     sed -i "s#$olddomain#$domain#g" /root/naive/naive-client.json
     sed -i "s#$olddomain#$domain#g" /root/naive/naive-url.txt
+
     reloadProxy
+
+    green "NaiveProxy 节点域名已成功修改为：$domain"
+    yellow "请手动更新客户端配置文件以使用节点"
+    showconf
 }
 
 changeusername(){
@@ -221,7 +237,12 @@ changeusername(){
     sed -i "s#$oldproxyname#$proxyname#g" /etc/caddy/Caddyfile
     sed -i "s#$oldproxyname#$proxyname#g" /root/naive/naive-client.json
     sed -i "s#$oldproxyname#$proxyname#g" /root/naive/naive-url.txt
+
     reloadProxy
+
+    green "NaiveProxy 节点用户名已成功修改为：$proxyname"
+    yellow "请手动更新客户端配置文件以使用节点"
+    showconf
 }
 
 changepassword(){
@@ -232,7 +253,12 @@ changepassword(){
     sed -i "s#$oldproxypwd#$proxypwd#g" /etc/caddy/Caddyfile
     sed -i "s#$oldproxypwd#$proxypwd#g" /root/naive/naive-client.json
     sed -i "s#$oldproxypwd#$proxypwd#g" /root/naive/naive-url.txt
+
     reloadProxy
+
+    green "NaiveProxy 节点密码已成功修改为：$proxypwd"
+    yellow "请手动更新客户端配置文件以使用节点"
+    showconf
 }
 
 changeproxysite(){
@@ -241,7 +267,10 @@ changeproxysite(){
     [[ -z $proxysite ]] && proxysite="maimai.sega.jp"
 
     sed -i "s#$oldproxysite#$proxysite#g" /etc/caddy/Caddyfile
+
     reloadProxy
+
+    green "NaiveProxy 节点伪装网站已成功修改为：$proxysite"
 }
 
 modifyConfig(){
@@ -261,6 +290,14 @@ modifyConfig(){
         5 ) changeproxysite ;;
         * ) exit 1 ;;
     esac
+}
+
+showconf(){
+    yellow "客户端配置文件内容如下，并保存到 /root/naive/naive-client.json"
+    cat /root/naive/naive-client.json
+    yellow "Qv2ray / SagerNet / Matsuri 分享链接已保存至 /root/naive/naive-url.txt"
+    yellow "SagerNet / Matsuri 分享二维码如下："
+    qrencode -o - -t ANSIUTF8 "$(cat /root/naive/naive-url.txt)"
 }
 
 menu(){
@@ -284,6 +321,7 @@ menu(){
     echo -e " ${GREEN}5.${PLAIN} 重载 NaiveProxy"
     echo " -------------"
     echo -e " ${GREEN}6.${PLAIN} 修改 NaiveProxy 配置"
+    echo -e " ${GREEN}7.${PLAIN} 查看 NaiveProxy 配置"
     echo " -------------"
     echo -e " ${GREEN}0.${PLAIN} 退出"
     echo ""
