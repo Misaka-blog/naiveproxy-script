@@ -89,7 +89,7 @@ installProxy(){
             [[ -z $caddyport ]] && caddyport=$(shuf -i 2000-65535 -n 1)
         fi
     done
-    yellow "将用在 Caddy 监听的端口是：$proxyport"
+    yellow "将用在 Caddy 监听的端口是：$caddyport"
     
     read -rp "请输入需要使用在 NaiveProxy 的域名：" domain
     yellow "使用在 NaiveProxy 节点的域名为：$domain"
@@ -167,8 +167,8 @@ EOF
 
 uninstallProxy(){
     systemctl stop caddy
-    rm -rf /etc/caddy
-    rm -f /usr/bin/caddy /root/naive-client.json
+    rm -rf /etc/caddy /root/naive
+    rm -f /usr/bin/caddy
     green "NaiveProxy 已彻底卸载成功！"
 }
 
