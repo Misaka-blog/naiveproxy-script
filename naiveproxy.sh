@@ -281,7 +281,7 @@ modifyConfig(){
     echo -e " ${GREEN}4.${PLAIN} 修改密码"
     echo -e " ${GREEN}5.${PLAIN} 修改伪装站地址"
     echo ""
-    read -p " 请选择操作[1-5]：" confAnswer
+    read -p " 请选择操作 [1-5]：" confAnswer
     case $confAnswer in
         1 ) changeport ;;
         2 ) changedomain ;;
@@ -294,8 +294,9 @@ modifyConfig(){
 
 showconf(){
     yellow "客户端配置文件内容如下，并保存到 /root/naive/naive-client.json"
-    cat /root/naive/naive-client.json
-    yellow "Qv2ray / SagerNet / Matsuri 分享链接已保存至 /root/naive/naive-url.txt"
+    red "$(cat /root/naive/naive-client.json)"
+    yellow "Qv2ray / SagerNet / Matsuri 分享链接如下，并保存到 /root/naive/naive-url.txt"
+    red "$(cat /root/naive/naive-url.txt)"
     yellow "SagerNet / Matsuri 分享二维码如下："
     qrencode -o - -t ANSIUTF8 "$(cat /root/naive/naive-url.txt)"
 }
@@ -325,7 +326,7 @@ menu(){
     echo " -------------"
     echo -e " ${GREEN}0.${PLAIN} 退出"
     echo ""
-    read -rp " 请输入选项 [0-6] ：" answer
+    read -rp " 请输入选项 [0-7] ：" answer
     case $answer in
         1) installProxy ;;
         2) uninstallProxy ;;
@@ -333,7 +334,8 @@ menu(){
         4) stopProxy ;;
         5) reloadProxy ;;
         6) modifyConfig ;;
-        *) red "请输入正确的选项 [0-6]！" && exit 1 ;;
+        7) showconf ;;
+        *) red "请输入正确的选项 [0-7]！" && exit 1 ;;
     esac
 }
 
